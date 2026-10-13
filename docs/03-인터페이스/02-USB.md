@@ -18,7 +18,7 @@ CRC  : u32, 머리‖본문의 CRC-32(zlib과 같은 값)
 | 항목 | 패드 | PC |
 |---|---|---|
 | CRC 함수 | `cs_crc32`(proto.cpp, 호스트 시험과 같은 코드) | `node:zlib`의 `crc32(p)` |
-| SLIP 부호화 | 모든 프레임 앞뒤에 `C0` | `gateway`의 `slipEncode`·`SlipDecoder`(순수 코드, 앞뒤 `C0`. 순수 패키지는 `@serialport/*`를 못 쓴다) |
+| SLIP 부호화 | 모든 프레임 앞뒤에 `C0` | `gateway`의 `slipEncode`·`SlipDecoder`(순수 코드, 앞뒤 `C0`. 순수 모듈은 `@serialport/*`를 못 쓴다) |
 | `boot` | `pad_boot_id`: BLE 초기화 뒤 `esp_random()`, 0이면 다시 | `pc_boot`: 게이트웨이 시작마다 u32 난수 |
 | `seq` | `pad_seq`: 1부터, 만든 프레임마다 +1(못 보내고 버린 것 포함). 부호화 전에 올림 | `pc_seq`: 같은 규칙 |
 | `t_us` | 프레임을 만드는 순간 `esp_timer_get_time()` | `process.hrtime.bigint() / 1000n`(진단용) |
