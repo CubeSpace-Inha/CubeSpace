@@ -1,20 +1,18 @@
 # 규격 v1 공용 코덱 구현 계획
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** 패드↔PC USB 프레임과 큐브↔패드 BLE 구조체를 PC(TypeScript)와 펌웨어(C)에 각각 구현하고, 독립 기준 구현(Python)이 만든 벡터 파일 하나로 두 구현이 같은 바이트를 만드는지 확인한다.
 
-**Architecture:** CubeSpace 저장소의 `spec/vectors/make_vectors.py`(표준 라이브러리만)가 규격 표를 그대로 옮겨 `spec/vectors/proto_vectors.hex`를 만든다. PC(CubeSpace-Client) `src/core/gateway/proto.ts`와 펌웨어(CubeSpace-Firmware) `libraries/CubeSpaceProto/src/proto.cpp`는 서로의 코드를 보지 않고 같은 파일(둘 다 그대로 복사한 것)만 통과하면 된다. 셋 다 입출력·시각이 없는 순수 코드라 하드웨어 없이 시험한다.
+**Architecture:** `packages/protocol/vectors/make_vectors.py`(표준 라이브러리만)가 규격 표를 그대로 옮겨 `packages/protocol/vectors/proto_vectors.hex`를 만든다. PC `packages/protocol/src/proto.ts`와 펌웨어 `firmware/libraries/CubeSpaceProto/src/proto.cpp`는 서로의 코드를 보지 않고 같은 파일(복사하지 않고 그 자리에서 읽음)만 통과하면 된다. 셋 다 입출력·시각이 없는 순수 코드라 하드웨어 없이 시험한다.
 
-**Tech Stack:** Python 3(표준 라이브러리), TypeScript 6.0 + Vitest 5(CubeSpace-Client, pnpm, Node 24, `node:zlib`의 `crc32`), C++17 + make(Arduino 스케치와 같은 C++. 로컬 Apple clang++, CI g++, Windows는 MSYS2 UCRT64 g++ 또는 WSL2).
+**Tech Stack:** Python 3(표준 라이브러리), TypeScript 6.0 + Vitest 5(`packages/protocol`, pnpm workspace, Node 24, `node:zlib`의 `crc32`), C++17 + make(Arduino 스케치와 같은 C++. 로컬 Apple clang++, CI g++, Windows는 MSYS2 UCRT64 g++ 또는 WSL2).
 
 **Spec:** [`docs/03-인터페이스/02-USB.md`](../../03-인터페이스/02-USB.md) 1·2·3·5·7절, [`01-BLE.md`](../../03-인터페이스/01-BLE.md) 2·3절, [`04-시험-벡터.md`](../../03-인터페이스/04-시험-벡터.md), [`02-펌웨어/05-선개발-시험.md`](../../02-펌웨어/05-선개발-시험.md) 1.1·4절, [`04-소프트웨어/01-구성.md`](../../04-소프트웨어/01-구성.md) 6절.
 
-**실행 위치:** 이 계획은 저장소 셋에서 나눠 실행한다. Task 1(생성기)은 CubeSpace(이 문서 저장소), Task 2(PC 코덱)는 CubeSpace-Client, Task 3(펌웨어 코덱)은 CubeSpace-Firmware. 브랜치·커밋·파일 경로는 그 Task가 적은 저장소 기준이다.
+**실행 위치:** 이 저장소(CubeSpace) 하나에서 실행한다. Task 1(생성기)은 `packages/protocol/vectors/`, Task 2(PC 코덱)는 `packages/protocol/`, Task 3(펌웨어 코덱)은 `firmware/`. 파일 경로와 명령은 저장소 뿌리 기준이다.
 
-**시작점:** 각 저장소의 기본 브랜치에서 새 브랜치 `feat/proto-v1`을 만들어 진행한다.
+**시작점:** 기본 브랜치에서 새 브랜치 `feat/proto-v1`을 만들고(Task 1 Step 1) 세 Task를 이어서 진행한다.
 
-**검증 기록:** 이 문서의 코드 블록은 2026-10-11에 임시 폴더에서 그대로 돌려 본 것이다. 생성기 69벡터, PC `Tests 65 passed`·`tsc` 오류 0, 펌웨어 `proto: crc 1, frame 53, slip 2, ble 3, pad 4 vectors OK`(clang++ `-Wpedantic`까지 경고 0). 일부러 필드 순서·CRC 다항식을 틀리게 하면 PC·펌웨어 시험이 모두 실패하는 것도 확인했다. g++(CI·MSYS2)와 Windows 실기로는 아직 돌려 보지 않았다(Task 3 Step 8). 이 결과는 저장소를 나누기 전 폴더 배치에서 돌린 것이라, CubeSpace `spec/vectors/`·CubeSpace-Client(경로, tsconfig include, ESLint를 포함한 `pnpm check`)·CubeSpace-Firmware에서 다시 돌려야 한다 [실측 필요].
+**검증 기록:** 이 문서의 코드 블록은 2026-10-11에 임시 폴더에서 그대로 돌려 본 것이다. 생성기 69벡터, PC `Tests 65 passed`·`tsc` 오류 0, 펌웨어 `proto: crc 1, frame 53, slip 2, ble 3, pad 4 vectors OK`(clang++ `-Wpedantic`까지 경고 0). 일부러 필드 순서·CRC 다항식을 틀리게 하면 PC·펌웨어 시험이 모두 실패하는 것도 확인했다. g++(CI·MSYS2)와 Windows 실기로는 아직 돌려 보지 않았다(Task 3 Step 8). 이 결과는 임시 폴더 배치에서 돌린 것이라, 이 저장소의 `packages/protocol`(경로, tsconfig include, ESLint를 포함한 `pnpm check`)과 `firmware/`에서 다시 돌려야 한다 [실측 필요].
 
 ## 이 계획의 위치
 
@@ -25,7 +23,7 @@
 | 3 | fw-cube-logic | `est`·`frame`·`tpad`, `cube_logic`(버튼 4 s 포함) |
 | 4 | fw-pad-logic | `pad_link`, `optics`, `pad_pump`·스냅샷·`led_map`, 가상 큐브·패드 → L0 파일 |
 | 5 | pc-engine-events | `engine`, `cube-events` |
-| 6 | pc-shell-adapter | 서비스 셸, C# 창 어댑터(CubeSpace-Program-Win32), G2 대본 |
+| 6 | pc-shell-adapter | 서비스 셸, C# 창 어댑터(`drivers/win-driver`), G2 대본 |
 
 - 중간 시연 G2(10/19~23, 시뮬레이터 큐브 4개로 실제 창 이동)는 PC 1 → 2 → 5 → 6이 임계 경로다. 펌웨어 3·4는 나란히 간다.
 - 2번부터는 앞 계획이 끝난 뒤 그때의 코드를 보고 쓴다.
@@ -35,11 +33,11 @@
 - 모든 정수는 리틀 엔디언, 구조체에 빈 바이트 없음. USB 머리 17 B, CRC는 u32 CRC-32(zlib과 같은 값).
 - 복원 프레임 21~1200 B, LOG text ≤ 200 B. SLIP은 앞뒤 `C0`, 안의 `C0 → DB DC`, `DB → DB DD`.
 - `PROTO = 1`. 메시지·EVT type 추가, 필드 길이·뜻 변경은 `PROTO` + 1(펌웨어·게이트웨이 함께).
-- PC 순수 모듈(CubeSpace-Client `src/core/gateway/`): `fs`·`net`·`http`·`serialport`·`@serialport/*`·Electron import 금지, `Date.now()`·`Math.random()`·`new Date()` 금지(`test/rules.test.ts`. CubeSpace-Client에 아직 없으면 리뷰로 확인한다). `node:zlib`는 허용.
-- PC 판은 CubeSpace-Client에 고정된 판을 따른다. 새 의존성을 넣지 않는다.
-- 펌웨어 호스트 시험은 시험 틀 없이 모듈마다 assert 실행 파일 하나, CubeSpace-Firmware에서 `make -C host_test`. 플래그 `-std=c++17 -Wall -Wextra -Werror`(Arduino 스케치가 C++이라 코덱도 C++).
+- PC 순수 모듈(`packages/protocol/src/`): `fs`·`net`·`http`·`serialport`·`@serialport/*`·Electron import 금지, `Date.now()`·`Math.random()`·`new Date()` 금지(저장소 뿌리 `test/rules.test.ts`. 아직 없으면 리뷰로 확인한다). `node:zlib`는 허용.
+- PC 판은 workspace에 고정된 판을 따른다. 새 의존성을 넣지 않는다.
+- 펌웨어 호스트 시험은 시험 틀 없이 모듈마다 assert 실행 파일 하나, `make -C firmware/host_test`. 플래그 `-std=c++17 -Wall -Wextra -Werror`(Arduino 스케치가 C++이라 코덱도 C++).
 - 같은 값은 한 곳: 펌웨어 `proto.h`(BLE는 `x1_proto.h`), PC `proto.ts`.
-- 벡터 파일은 CubeSpace `spec/vectors/`에서 생성기로만 만든다. 손으로 고치지 않는다. CubeSpace-Client는 `test/vectors/proto_vectors.hex`, CubeSpace-Firmware는 `host_test/vectors/proto_vectors.hex`에 그대로 복사해 두고, 생성기가 다시 만들면 다시 복사한다. 복사 커밋 메시지에 원본 CubeSpace 커밋을 적는다.
+- 벡터 파일은 `packages/protocol/vectors/`에서 생성기로만 만든다. 손으로 고치지 않는다. PC 시험과 펌웨어 호스트 시험은 이 파일을 그 자리에서 읽는다(복사본 없음).
 - `[실측 필요]` 값(큐브 전압 검사 2500~4500 mV)은 상수 한 곳에 둔다.
 
 ## Windows에서 실행
@@ -50,7 +48,7 @@
 |---|---|
 | `python3 …` | `py …`(Python 3.10 이상). 생성기는 인코딩을 UTF-8·LF로 고정해 Windows 기본(cp949·CRLF)에 흔들리지 않는다 |
 | `pnpm`·`git` | PowerShell·cmd 어디서나. `pnpm install`은 Windows PowerShell에서 한다(WSL에서 설치한 `node_modules`는 Windows에서 못 쓴다). Windows PowerShell 5.1은 `&&`를 모르니 한 줄씩 친다 |
-| `make -C host_test`(CubeSpace-Firmware) | MSYS2 UCRT64 셸(`pacman -S make mingw-w64-ucrt-x86_64-gcc`) 또는 WSL2 Ubuntu(`sudo apt install build-essential`). 저장소는 `C:\dev\CubeSpace-Firmware`처럼 짧은 ASCII 경로에 둔다 |
+| `make -C firmware/host_test` | MSYS2 UCRT64 셸(`pacman -S make mingw-w64-ucrt-x86_64-gcc`) 또는 WSL2 Ubuntu(`sudo apt install build-essential`). 저장소는 `C:\dev\CubeSpace`처럼 짧은 ASCII 경로에 둔다 |
 | `gh run watch` | GitHub CLI 설치 필요. 없으면 웹에서 Actions 탭을 본다 |
 
 ## Review Focus
@@ -65,27 +63,24 @@
 
 | 파일 | 책임 |
 |---|---|
-| 새 `spec/vectors/make_vectors.py`(CubeSpace) | 규격 표를 옮긴 독립 기준 구현. 벡터 생성과 `--check` |
-| 새 `spec/vectors/proto_vectors.hex`(CubeSpace) | 생성된 공용 벡터 69개 |
-| 고침 `.github/workflows/ci.yml`·`.gitignore`(CubeSpace) | 벡터 재생성 검사를 CI에 |
-| 새 `src/core/gateway/proto.ts`(CubeSpace-Client) | PC 코덱: 해독·부호화·SLIP·시각 복원·PC 값 검사 |
-| 새 `src/core/gateway/index.ts`(CubeSpace-Client) | `proto` 내보내기 |
-| 복사 `test/vectors/proto_vectors.hex`(CubeSpace-Client) | CubeSpace 벡터 파일을 그대로 복사 |
-| 새 `test/proto.test.ts`(CubeSpace-Client) | 벡터로 PC 코덱 시험 |
-| 새 `libraries/CubeSpaceProto/src/x1_proto.h`(CubeSpace-Firmware) | BLE UUID, CFG·EVT 구조체 |
-| 새 `libraries/CubeSpaceProto/src/proto.h`·`proto.cpp`(CubeSpace-Firmware) | 펌웨어 코덱: 구조체·CRC·해독·부호화·SLIP·패드 인자 검사 |
-| 복사 `host_test/vectors/proto_vectors.hex`(CubeSpace-Firmware) | CubeSpace 벡터 파일을 그대로 복사 |
-| 새 `host_test/Makefile`·`test_proto.cpp`(CubeSpace-Firmware) | 벡터로 펌웨어 코덱 시험 |
-| 고침 `.github/workflows/`·`.gitignore`(CubeSpace-Firmware) | 호스트 시험을 CI에 |
-| 고침 문서(CubeSpace) | 04-시험-벡터(벡터 파일 형식) |
+| 새 `packages/protocol/vectors/make_vectors.py` | 규격 표를 옮긴 독립 기준 구현. 벡터 생성과 `--check` |
+| 새 `packages/protocol/vectors/proto_vectors.hex` | 생성된 공용 벡터 69개 |
+| 새 `packages/protocol/src/proto.ts` | PC 코덱: 해독·부호화·SLIP·시각 복원·PC 값 검사 |
+| 새 `packages/protocol/src/index.ts` | `proto` 내보내기 |
+| 새 `packages/protocol/test/proto.test.ts` | 벡터로 PC 코덱 시험 |
+| 새 `firmware/libraries/CubeSpaceProto/src/x1_proto.h` | BLE UUID, CFG·EVT 구조체 |
+| 새 `firmware/libraries/CubeSpaceProto/src/proto.h`·`proto.cpp` | 펌웨어 코덱: 구조체·CRC·해독·부호화·SLIP·패드 인자 검사 |
+| 새 `firmware/host_test/Makefile`·`test_proto.cpp` | 벡터로 펌웨어 코덱 시험 |
+| 고침 `.github/workflows/ci.yml`·`.gitignore` | 벡터 재생성 검사와 펌웨어 호스트 시험을 CI에 |
+| 고침 문서 | 04-시험-벡터(벡터 파일 형식) |
 
 ---
 
-### Task 1: 벡터 파일 형식과 생성기(CubeSpace `spec/vectors/`)
+### Task 1: 벡터 파일 형식과 생성기(`packages/protocol/vectors/`)
 
-**Files:**(CubeSpace 저장소)
-- Create: `spec/vectors/make_vectors.py`
-- Create(생성): `spec/vectors/proto_vectors.hex`
+**Files:**
+- Create: `packages/protocol/vectors/make_vectors.py`
+- Create(생성): `packages/protocol/vectors/proto_vectors.hex`
 - Modify: `docs/03-인터페이스/04-시험-벡터.md`(벡터 파일 형식 문단), `.github/workflows/ci.yml`, `.gitignore`
 
 **Interfaces:**
@@ -107,7 +102,7 @@ cd ../CubeSpace-proto-v1
 
 - [ ] **Step 2: 생성기를 쓴다**
 
-`spec/vectors/make_vectors.py`:
+`packages/protocol/vectors/make_vectors.py`:
 
 ```python
 """규격 v1 공용 시험 벡터 생성기. 표준 라이브러리만 쓰는 독립 기준 구현이다.
@@ -314,16 +309,16 @@ else:
 
 생성기 안의 assert가 문서 계산 예 3개(HB·REG_SCAN·EVT 바이트), CRC 검사값, BLE 구조체 크기, 시각 복원 표를 대조한다. 하나라도 어긋나면 `AssertionError`로 멈춘다.
 
-Run: `python3 spec/vectors/make_vectors.py`
+Run: `python3 packages/protocol/vectors/make_vectors.py`
 Expected: `wrote proto_vectors.hex: 69 vectors`
 
-Run: `python3 spec/vectors/make_vectors.py --check`
+Run: `python3 packages/protocol/vectors/make_vectors.py --check`
 Expected: `OK 69 vectors`
 
 - [ ] **Step 4: 문서에 줄 형식을 적는다**
 
-벡터 위치(F4)는 이미 문서에 반영돼 있다(`CubeSpace/spec/vectors/`, CubeSpace-Firmware·CubeSpace-Client는 복사본). 다시 고치지 말고 맞는지만 본다:
-- `docs/03-인터페이스/04-시험-벡터.md`의 위치 문장이 `spec/vectors/proto_vectors.hex`를 원본으로, Firmware `host_test/vectors/`·Client `test/vectors/`를 복사본으로 적고 있다
+벡터 위치(F4)는 이미 문서에 반영돼 있다(`packages/protocol/vectors/`, 복사본 없음). 다시 고치지 말고 맞는지만 본다:
+- `docs/03-인터페이스/04-시험-벡터.md`의 위치 문장이 `packages/protocol/vectors/proto_vectors.hex` 하나를 PC 시험과 펌웨어 호스트 시험이 그대로 읽는다고 적고 있다
 - `grep -rn "F4" docs/0*/*.md` 결과에 미정 F4 행이 없다(하드웨어 문서의 `F05-…` 같은 시험 이름은 상관없음)
 
 어긋나면 이 Task에서 고치지 말고 팀에 알린다.
@@ -348,7 +343,7 @@ Expected: `OK 69 vectors`
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - run: python3 spec/vectors/make_vectors.py --check
+      - run: python3 packages/protocol/vectors/make_vectors.py --check
 ```
 
 `.gitignore` 끝에 붙인다:
@@ -360,7 +355,7 @@ __pycache__/
 - [ ] **Step 6: 커밋**
 
 ```bash
-git add spec/vectors docs/03-인터페이스/04-시험-벡터.md .github/workflows/ci.yml .gitignore
+git add packages/protocol/vectors docs/03-인터페이스/04-시험-벡터.md .github/workflows/ci.yml .gitignore
 git commit -m "feat(proto): 공용 시험 벡터 생성기와 벡터 파일 형식"
 ```
 
@@ -368,14 +363,13 @@ git commit -m "feat(proto): 공용 시험 벡터 생성기와 벡터 파일 형�
 
 ### Task 2: PC 코덱 `proto.ts`
 
-**Files:**(CubeSpace-Client 저장소)
-- Create: `src/core/gateway/proto.ts`, `src/core/gateway/index.ts`
-- Copy: `test/vectors/proto_vectors.hex`(CubeSpace Task 1 결과 그대로)
-- Test: `test/proto.test.ts`
+**Files:**
+- Create: `packages/protocol/src/proto.ts`, `packages/protocol/src/index.ts`
+- Test: `packages/protocol/test/proto.test.ts`
 
 **Interfaces:**
 - Consumes: Task 1의 `proto_vectors.hex`(형식은 Task 1 Interfaces)
-- Produces(`src/core/gateway/index.ts`에서 내보냄):
+- Produces(`packages/protocol/src/index.ts`에서 내보냄):
   - 상수 `PROTO`, `HEADER_LEN`, `MIN_FRAME`, `MAX_FRAME`, `INT16_MIN`, `BATT_MV_MIN`, `BATT_MV_MAX`, `T`(메시지 type 15개)
   - `type Value = number | number[] | Uint8Array`
   - `interface Frame { type: number; boot: number; seq: number; t_us: bigint; body: Record<string, Value> }`
@@ -385,31 +379,27 @@ git commit -m "feat(proto): 공용 시험 벡터 생성기와 벡터 파일 형�
   - `restorePadTime(t_us: bigint, t_pad32: number): { t_pad_us: bigint; t_valid: boolean }`
   - `checkFields(f: Frame): string | null`(null = 통과, 아니면 어긴 항목 이름)
 
-- [ ] **Step 1: 브랜치를 만들고 벡터 파일을 복사한다**
+- [ ] **Step 1: workspace를 준비한다**
 
-CubeSpace-Client 폴더에서 한 줄씩(`<CubeSpace>`는 Task 1의 worktree `CubeSpace-proto-v1` 경로):
+Task 1의 worktree(`CubeSpace-proto-v1`)에서 이어서 한다. 전제: 저장소 뿌리에 pnpm workspace(`package.json`·`pnpm-workspace.yaml`, 고정 판 TypeScript·Vitest)가 있다([01-구성](../../04-소프트웨어/01-구성.md) 5절 첫 커밋). 없으면 그 커밋을 먼저 한다. `packages/protocol/package.json`이 없으면 이름 `@cubespace/protocol`, `private: true`로 만든다 [실측 필요].
 
 ```text
-git switch -c feat/proto-v1
-mkdir -p test/vectors
-cp <CubeSpace>/spec/vectors/proto_vectors.hex test/vectors/
-git -C <CubeSpace> rev-parse --short HEAD
 pnpm install
 ```
 
-Windows PowerShell은 `mkdir -p` 대신 `New-Item -ItemType Directory -Force test/vectors`, `cp` 대신 `Copy-Item`. 마지막 `rev-parse` 출력(원본 CubeSpace 커밋)은 Step 7 커밋 메시지에 쓴다. 복사한 파일은 손으로 고치지 않는다.
+벡터 파일은 복사하지 않는다. 시험이 `packages/protocol/vectors/proto_vectors.hex`를 그 자리에서 읽는다.
 
 - [ ] **Step 2: 실패하는 시험을 쓴다**
 
-`test/proto.test.ts`:
+`packages/protocol/test/proto.test.ts`:
 
 ```ts
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { SlipDecoder, checkFields, decodeFrame, encodeFrame, restorePadTime, slipEncode, type Value } from '../src/core/gateway/proto';
+import { SlipDecoder, checkFields, decodeFrame, encodeFrame, restorePadTime, slipEncode, type Value } from '../src/proto';
 
 // 펌웨어 host_test와 같은 파일(줄 형식: docs/03-인터페이스/04-시험-벡터.md "벡터 파일 형식")
-const FILE = new URL('./vectors/proto_vectors.hex', import.meta.url);
+const FILE = new URL('../vectors/proto_vectors.hex', import.meta.url);
 const hex = (s: string) => Uint8Array.from(s.match(/../g) ?? [], (h) => parseInt(h, 16));
 const vectors = readFileSync(FILE, 'utf8').split(/\r?\n/).filter((l) => l && !l.startsWith('#')).map((l) => {
   const [group, name, expect, data, ...kv] = l.split(' ');
@@ -485,12 +475,12 @@ it('본문 바이트열 길이가 틀리면 부호화하지 않는다', () => {
 
 - [ ] **Step 3: 실패를 확인한다**
 
-Run(CubeSpace-Client 폴더): `pnpm exec vitest run test/proto.test.ts`
-Expected: FAIL. `../src/core/gateway/proto`를 찾지 못한다는 오류
+Run(`packages/protocol` 폴더): `pnpm exec vitest run test/proto.test.ts`
+Expected: FAIL. `../src/proto`를 찾지 못한다는 오류
 
 - [ ] **Step 4: 코덱을 쓴다**
 
-`src/core/gateway/proto.ts`:
+`packages/protocol/src/proto.ts`:
 
 ```ts
 // USB 규격 v1 부호화·해독(docs/03-인터페이스/02-USB.md 1·2·3·5·7절). 순수 코드: 입출력·시각·난수 없음.
@@ -703,33 +693,33 @@ function checkEvt(type: number, v0: number, v1: number): string | null {
 }
 ```
 
-`src/core/gateway/index.ts`(새 파일):
+`packages/protocol/src/index.ts`(새 파일):
 
 ```ts
-// gateway: USB 프레임 검증·순번·재부팅·세션·시각 변환. 순수 모듈(입출력·Electron·시각 없음).
+// protocol: 공용 메시지 형식. 순수 모듈(입출력·Electron·시각 없음).
 export * from './proto';
 ```
 
 - [ ] **Step 5: 통과를 확인한다**
 
-tsconfig의 `include`에 `src/core/**`와 `test/**`가 들어 있는지 먼저 본다 [실측 필요].
+tsconfig의 `include`에 `packages/protocol`의 `src/**`와 `test/**`가 들어 있는지 먼저 본다 [실측 필요].
 
-Run(CubeSpace-Client 폴더): `pnpm exec vitest run test/proto.test.ts`
+Run(`packages/protocol` 폴더): `pnpm exec vitest run test/proto.test.ts`
 Expected: `Tests  65 passed (65)`
 
-Run(CubeSpace-Client 폴더): `pnpm check`
+Run(저장소 뿌리): `pnpm check`
 Expected: lint·typecheck·test 모두 실패 0(`test/rules.test.ts`가 있으면 순수 모듈 규칙 포함). ESLint 지적이 나오면 동작을 바꾸지 않는 범위에서 고치고 벡터 시험을 다시 돌린다 [실측 필요].
 
-- [ ] **Step 6: USB 문서를 확인한다(CubeSpace)**
+- [ ] **Step 6: USB 문서를 확인한다**
 
-`docs/03-인터페이스/02-USB.md` 1절 SLIP 줄의 PC 칸이 `gateway`의 `slipEncode`·`SlipDecoder`인지 본다(문서에는 이미 반영돼 있다). 어긋나면 이 Task에서 고치지 말고 팀에 알린다.
+`docs/03-인터페이스/02-USB.md` 1절 SLIP 줄의 PC 칸이 `protocol`의 `slipEncode`·`SlipDecoder`인지 본다(문서에는 이미 반영돼 있다). 어긋나면 이 Task에서 고치지 말고 팀에 알린다.
 
-- [ ] **Step 7: 커밋(저장소마다 따로)**
+- [ ] **Step 7: 커밋**
 
-CubeSpace-Client(`<커밋>`은 Step 1의 `rev-parse` 출력):
+`pnpm install`로 잠금 파일이 바뀌었으면 함께 넣는다.
 ```bash
-git add src/core/gateway test/proto.test.ts test/vectors/proto_vectors.hex
-git commit -m "feat(gateway): USB 규격 v1 코덱과 공용 벡터 시험(벡터: CubeSpace <커밋>)"
+git add packages/protocol
+git commit -m "feat(protocol): USB 규격 v1 코덱과 공용 벡터 시험"
 ```
 
 
@@ -737,14 +727,13 @@ git commit -m "feat(gateway): USB 규격 v1 코덱과 공용 벡터 시험(벡�
 
 ### Task 3: 펌웨어 코덱 `CubeSpaceProto`와 CI
 
-**Files:**(CubeSpace-Firmware 저장소)
-- Create: `libraries/CubeSpaceProto/src/x1_proto.h`, `proto.h`, `proto.cpp`
-- Copy: `host_test/vectors/proto_vectors.hex`(CubeSpace Task 1 결과 그대로)
-- Test: `host_test/Makefile`, `host_test/test_proto.cpp`
-- Modify: `.github/workflows/host-test.yml`(없으면 새로), `.gitignore`
+**Files:**
+- Create: `firmware/libraries/CubeSpaceProto/src/x1_proto.h`, `proto.h`, `proto.cpp`
+- Test: `firmware/host_test/Makefile`, `firmware/host_test/test_proto.cpp`
+- Modify: `.github/workflows/ci.yml`(Task 1에서 만든 것), `.gitignore`
 
 **Interfaces:**
-- Consumes: Task 1의 `proto_vectors.hex`(복사본)
+- Consumes: Task 1의 `packages/protocol/vectors/proto_vectors.hex`(그 자리에서 읽음)
 - Produces(`proto.h`·`x1_proto.h`, 펌웨어 계획 3·4가 쓴다):
   - 구조체 `cs_hdr_t`, `cs_hello_t`, `cs_status_t`, `cs_obs_t`(14 B, 뒤에 `v` i16 × h·w), `cs_evt_t`(`slot` + `x1_evt_t e`), `cs_link_t`, `cs_cand_t`, `cs_ack_t`, `cs_log_t`, `cs_pc_hello_t`, `cs_led_t`, `cs_reg_t`, `cs_reg_scan_t`, `cs_icon_t`, `x1_cfg_t`, `x1_evt_t`
   - 상수 `CS_PROTO`, `CS_HDR_LEN`, `CS_MIN_FRAME`, `CS_MAX_FRAME`, `CS_T_*`, `CS_OK`·`CS_DROP_LEN`·`CS_DROP_CRC`·`CS_DROP_TYPE`·`CS_DROP_BODY`, `X1_*_UUID`, `X1_CFG_VER`, `X1_ICON_LEN`, `X1_EVT_*`
@@ -754,28 +743,19 @@ git commit -m "feat(gateway): USB 규격 v1 코덱과 공용 벡터 시험(벡�
   - `size_t cs_slip_encode(const uint8_t *in, size_t n, uint8_t *out, size_t cap)`, `cs_slip_rx_t`, `size_t cs_slip_push(cs_slip_rx_t *rx, uint8_t x)`
   - `uint8_t cs_pad_check(uint8_t type, const uint8_t *body)`(0 또는 ACK code 2)
 
-- [ ] **Step 0: 브랜치를 만들고 벡터 파일을 복사한다**
+- [ ] **Step 0: 같은 worktree에서 이어 간다**
 
-CubeSpace-Firmware 폴더에서 한 줄씩(`<CubeSpace>`는 Task 1의 worktree `CubeSpace-proto-v1` 경로):
-
-```text
-git switch -c feat/proto-v1
-mkdir -p host_test/vectors
-cp <CubeSpace>/spec/vectors/proto_vectors.hex host_test/vectors/
-git -C <CubeSpace> rev-parse --short HEAD
-```
-
-Windows PowerShell은 `mkdir -p` 대신 `New-Item -ItemType Directory -Force host_test/vectors`, `cp` 대신 `Copy-Item`. 마지막 `rev-parse` 출력(원본 CubeSpace 커밋)은 Step 8 커밋 메시지에 쓴다. 복사한 파일은 손으로 고치지 않는다.
+Task 1·2의 worktree(`CubeSpace-proto-v1`)와 브랜치 `feat/proto-v1`에서 한다. 복사할 파일은 없다. Makefile이 `packages/protocol/vectors/proto_vectors.hex`를 그 자리에서 읽는다.
 
 - [ ] **Step 1: 실패하는 시험을 쓴다**
 
-`host_test/Makefile`(들여쓰기는 탭):
+`firmware/host_test/Makefile`(들여쓰기는 탭):
 
 ```make
-# 순수 모듈 호스트 시험(펌웨어 05 1.1). 모듈마다 assert 실행 파일 하나. 실행: make -C host_test
+# 순수 모듈 호스트 시험(펌웨어 05 1.1). 모듈마다 assert 실행 파일 하나. 실행: make -C firmware/host_test
 # Windows는 MSYS2 UCRT64 셸(pacman -S make mingw-w64-ucrt-x86_64-gcc) 또는 WSL2에서.
 LIB = ../libraries/CubeSpaceProto/src
-VEC = vectors/proto_vectors.hex
+VEC = ../../packages/protocol/vectors/proto_vectors.hex
 CXXFLAGS = -std=c++17 -Wall -Wextra -Werror -I$(LIB)
 
 test: test_proto
@@ -790,7 +770,7 @@ clean:
 .PHONY: test clean
 ```
 
-`host_test/test_proto.cpp`:
+`firmware/host_test/test_proto.cpp`:
 
 ```cpp
 // 공용 벡터(proto_vectors.hex)로 proto.cpp·x1_proto.h를 맞춘다. 줄 형식: docs/03-인터페이스/04-시험-벡터.md
@@ -1001,7 +981,7 @@ int main(int argc, char **argv) {
 
 - [ ] **Step 2: 실패를 확인한다**
 
-Run(CubeSpace-Firmware 폴더): `make -C host_test`
+Run(저장소 뿌리): `make -C firmware/host_test`
 Expected: FAIL. `../libraries/CubeSpaceProto/src/proto.cpp`를 만들 규칙이 없다는 make 오류
 
 - [ ] **Step 3: BLE 구조체를 쓴다**
@@ -1227,35 +1207,28 @@ uint8_t cs_pad_check(uint8_t type, const uint8_t *body) {
 
 - [ ] **Step 5: 통과를 확인한다**
 
-Run(CubeSpace-Firmware 폴더): `make -C host_test`
+Run(저장소 뿌리): `make -C firmware/host_test`
 Expected: `proto: crc 1, frame 53, slip 2, ble 3, pad 4 vectors OK`
 
 - [ ] **Step 6: CI와 무시 목록**
 
-CubeSpace-Firmware `.github/workflows/host-test.yml`(이미 CI 파일이 있으면 그 `jobs:` 아래에 `host-test` 작업만 붙인다):
+`.github/workflows/ci.yml`의 `jobs:` 아래, `vectors` 작업(Task 1 Step 5) 뒤에 붙인다:
 
 ```yaml
-name: host-test
-
-on:
-  push:
-  pull_request:
-
-jobs:
   host-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - run: make -C host_test
+      - run: make -C firmware/host_test
 ```
 
-벡터 재생성 검사(`--check`)는 CubeSpace CI(Task 1 Step 5)가 맡는다.
+벡터 재생성 검사(`--check`)는 같은 CI의 `vectors` 작업이 맡는다.
 
 `.gitignore` 끝에 붙인다:
 
 ```text
-host_test/test_proto
-host_test/test_proto.exe
+firmware/host_test/test_proto
+firmware/host_test/test_proto.exe
 ```
 
 - [ ] **Step 7: 문서를 확인한다**
@@ -1264,10 +1237,10 @@ host_test/test_proto.exe
 
 - [ ] **Step 8: 커밋하고 CI(gcc)를 본다(푸시는 사용자 확인 뒤)**
 
-CubeSpace-Firmware 폴더(커밋 메시지 끝에 Step 0의 원본 CubeSpace 커밋을 적는다):
+저장소 뿌리에서:
 ```bash
-git add libraries/CubeSpaceProto/src host_test .github/workflows/host-test.yml .gitignore
-git commit -m "feat: CubeSpaceProto 코덱과 호스트 시험, CI (벡터: CubeSpace <커밋>)"
+git add firmware/libraries/CubeSpaceProto/src firmware/host_test .github/workflows/ci.yml .gitignore
+git commit -m "feat(firmware): CubeSpaceProto 코덱과 호스트 시험, CI"
 git push -u origin feat/proto-v1
 gh run watch
 ```
@@ -1279,7 +1252,7 @@ Expected: `host-test` 작업 성공. 이 작업이 처음으로 g++에서 `-Werr
 
 ## 끝난 기준
 
-- CubeSpace: `python3 spec/vectors/make_vectors.py --check` → `OK 69 vectors`, CI `vectors` 성공
-- CubeSpace-Client: `pnpm check` → 실패 0
-- CubeSpace-Firmware: `make -C host_test` → `… vectors OK`, CI `host-test` 성공
-- Client `test/vectors/proto_vectors.hex`와 Firmware `host_test/vectors/proto_vectors.hex`가 CubeSpace `spec/vectors/proto_vectors.hex`와 바이트까지 같다
+- `python3 packages/protocol/vectors/make_vectors.py --check` → `OK 69 vectors`, CI `vectors` 성공
+- `pnpm check` → 실패 0
+- `make -C firmware/host_test` → `… vectors OK`, CI `host-test` 성공
+- 벡터 파일은 `packages/protocol/vectors/proto_vectors.hex` 하나뿐이다(복사본 없음)

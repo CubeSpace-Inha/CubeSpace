@@ -3,7 +3,7 @@
 물리 큐브를 센서 패드 위에 놓고 움직여 Windows 창 배치와 AI 작업(Claude Code·Codex)을 제어하는 시스템이다. 컴퓨터공학종합설계(2026-2) 캡스톤 프로젝트.
 
 - 문서: [docs/README.md](docs/README.md)에서 시작한다. 처음이면 [아키텍처](docs/00-공통/01-아키텍처.md)부터 읽는다.
-- 지금 이 저장소에는 문서(`docs/`)만 있다. 공용 시험 벡터와 제작 파일은 이후 이 저장소에 올리고, 코드는 배포 단위마다 따로 둔 저장소에 올린다([저장소](#저장소)).
+- 지금 이 저장소에는 문서(`docs/`)만 있다. 코드·공용 시험 벡터·제작 파일도 이후 이 저장소 하나에 올린다([저장소](#저장소)).
 
 ## 무엇을 하나
 
@@ -77,29 +77,39 @@
 | 항목 | 값 |
 |---|---|
 | 대상 PC | Windows 11, 일반 사용자 권한, 주 모니터 1대(배율 고정) |
-| PC 앱 | CubeSpace-Client: npm 패키지 하나, pnpm, electron-vite 5, Node 24, Electron 44(정확 고정), React 19, TypeScript 6.0, Vitest + Testing Library, ESLint. Windows는 PowerShell에서 설치·실행 |
-| 창 어댑터 | CubeSpace-Program-Win32: C#, .NET 10 LTS 자체 포함 단일 파일(게시는 Windows에서) |
-| 펌웨어 | Arduino-ESP32 3.3.12 고정 + BLE 라이브러리 재빌드, arduino-cli |
-| 펌웨어 호스트 시험 | CubeSpace-Firmware에서 `make -C host_test`. Windows는 MSYS2 UCRT64 셸 또는 WSL2 |
+| PC 앱 | `packages/`·`apps/`: pnpm workspace 하나, electron-vite 5, Node 24, Electron 44(정확 고정), React 19, TypeScript 6.0, Vitest + Testing Library, ESLint. Windows는 PowerShell에서 설치·실행 |
+| 창 어댑터 | `drivers/win-driver`: C#, .NET 10 LTS 자체 포함 단일 파일(게시는 Windows에서) |
+| 펌웨어 | `firmware/`: Arduino-ESP32 3.3.12 고정 + BLE 라이브러리 재빌드, arduino-cli(PlatformIO로 바꿀지 [미정 F8](docs/00-공통/03-미정-결정.md)) |
+| 펌웨어 호스트 시험 | `make -C firmware/host_test`. Windows는 MSYS2 UCRT64 셸 또는 WSL2 |
 | Python 도구 | Windows는 `python3` 대신 `py` |
 
 Windows에서 주의할 점(긴 경로·한글 사용자 이름, PowerShell 5.1의 `&&`, Python 기본 인코딩)은 [펌웨어 01](docs/02-펌웨어/01-구조-빌드.md)과 [proto-v1](docs/superpowers/plans/proto-v1.md)에 있다.
 
 ## 저장소
 
-GitHub `CubeSpace-Inha`에 따로 배포되는 것마다 저장소 하나를 둔다. 자세한 규칙은 [아키텍처 8](docs/00-공통/01-아키텍처.md).
+이 저장소(GitHub `CubeSpace-Inha/CubeSpace`) 하나에 문서와 모든 코드를 둔다. 자세한 규칙은 [아키텍처 8](docs/00-공통/01-아키텍처.md), 패키지 안 폴더는 [소프트웨어 01](docs/04-소프트웨어/01-구성.md) 2절.
 
-| 저장소 | 내용 | 배포 |
-|---|---|---|
-| CubeSpace(이 저장소) | 문서 `docs/`, 공용 시험 벡터 `spec/vectors/`, 하드웨어 제작 파일 `hardware/`, 광학·측정 도구 `optics/`·`measure/`(Python) | 없음(기준) |
-| CubeSpace-Firmware | 큐브·패드 펌웨어, 공용 규격 라이브러리, 호스트 시험 | 펌웨어 바이너리 |
-| CubeSpace-Client | 동반 앱(Electron + React)과 PC 서비스. 폴더는 [소프트웨어 01](docs/04-소프트웨어/01-구성.md) 2절 | 앱 설치본 |
-| CubeSpace-Program-Win32 | Windows 창 어댑터(C#) | exe(GitHub Release) |
-| CubeSpace-Server | AI 확장(skill·plugin·MCP) 목록과 갱신, 사용자별 설정 보관, 세팅 공유·추천 | 서버 |
+```text
+CubeSpace/
+├── docs/               문서
+├── packages/
+│   └── protocol/       공용 메시지 형식과 공용 시험 벡터
+├── apps/
+│   ├── client/         화면(Electron). 상태 없음, core의 스냅샷만 그린다
+│   ├── core/           상태·판단. 상태를 쓰는 유일한 곳
+│   ├── pad-gateway/    실제 패드 연결(USB)
+│   ├── pad-sim/        가상 패드(개발·시연 대체)
+│   └── server/         서버(AI 확장 목록, 설정 보관, 세팅 공유)
+├── drivers/
+│   └── win-driver/     창 어댑터(C#, Win32)
+├── firmware/           큐브·패드 펌웨어
+├── hardware/           제작 파일과 생성 스크립트
+└── optics/ measure/    광학·측정 도구(Python)
+```
 
-규격과 공용 시험 벡터는 CubeSpace에서만 만들고 다른 저장소는 복사해 쓴다. 담당은 팀에서 정한다.
+규격을 바꿀 때는 규격 문서·공용 시험 벡터·PC 코드·펌웨어 코드를 PR 하나로 함께 고친다. 담당은 팀에서 정한다.
 
-코드 규칙: 판단 모듈(CubeSpace-Client `src/core`의 `engine`·`estimate`·`gateway`·`cube-events`·`cube-replay`)은 입출력·Electron·`Date.now()`·`Math.random()`을 쓰지 않는다. IPC 채널은 채널 목록·스키마·처리기를 같은 커밋에서 고친다. 의존성은 정확한 판으로 넣는다(`^`·`~` 없이).
+코드 규칙: 판단 모듈(`packages/protocol`, `apps/core`의 `engine`·`estimate`·`cube-events`, `apps/pad-gateway`의 `gateway`, `apps/pad-sim`의 `cube-replay`)은 입출력·Electron·`Date.now()`·`Math.random()`을 쓰지 않는다. IPC 채널은 채널 목록·스키마·처리기를 같은 커밋에서 고친다. 의존성은 정확한 판으로 넣는다(`^`·`~` 없이).
 
 ## 라이선스
 
