@@ -46,7 +46,7 @@
 |---|---|
 | 규격 | 큐브·패드가 보내는 값과 PC가 보내는 값, 바이트 형식을 규격 v1로 확정(10/11). [BLE](docs/03-인터페이스/01-BLE.md), [USB](docs/03-인터페이스/02-USB.md) |
 | 하드웨어 | 설계 문서 완료, 제작이 늦어지고 있다. 하드웨어로 정할 값은 문서에 `[실측 필요]`로 표시 |
-| 펌웨어·PC | 하드웨어 없이 먼저 개발한다. 가상 큐브·패드와 시뮬레이터로 시험([선개발](docs/02-펌웨어/05-선개발-시험.md)). 첫 구현 계획: [proto-v1](docs/superpowers/plans/proto-v1.md)(공용 규격 코덱과 시험 벡터) |
+| 펌웨어·PC | 하드웨어 없이 먼저 개발한다. 가상 큐브·패드와 시뮬레이터로 시험([선개발](docs/02-펌웨어/05-선개발-시험.md)). 첫 구현 계획: [proto-v1](docs/plans/proto-v1.md)(공용 규격 코덱과 시험 벡터) |
 | 정할 것 | [미정·결정 목록](docs/00-공통/03-미정-결정.md). `[미정 …]`은 잠정값으로 구현하고, 결정이 나면 문서를 고친다 |
 
 ## 일정 게이트
@@ -83,7 +83,7 @@
 | 펌웨어 호스트 시험 | `make -C firmware/host_test`. Windows는 MSYS2 UCRT64 셸 또는 WSL2 |
 | Python 도구 | Windows는 `python3` 대신 `py` |
 
-Windows에서 주의할 점(긴 경로·한글 사용자 이름, PowerShell 5.1의 `&&`, Python 기본 인코딩)은 [펌웨어 01](docs/02-펌웨어/01-구조-빌드.md)과 [proto-v1](docs/superpowers/plans/proto-v1.md)에 있다.
+Windows에서 주의할 점(긴 경로·한글 사용자 이름, PowerShell 5.1의 `&&`, Python 기본 인코딩)은 [펌웨어 01](docs/02-펌웨어/01-구조-빌드.md)과 [proto-v1](docs/plans/proto-v1.md)에 있다.
 
 ## 저장소
 

@@ -6,7 +6,7 @@
 
 **Tech Stack:** Python 3(표준 라이브러리), TypeScript 6.0 + Vitest 5(`packages/protocol`, pnpm workspace, Node 24, `node:zlib`의 `crc32`), C++17 + make(Arduino 스케치와 같은 C++. 로컬 Apple clang++, CI g++, Windows는 MSYS2 UCRT64 g++ 또는 WSL2).
 
-**Spec:** [`docs/03-인터페이스/02-USB.md`](../../03-인터페이스/02-USB.md) 1·2·3·5·7절, [`01-BLE.md`](../../03-인터페이스/01-BLE.md) 2·3절, [`04-시험-벡터.md`](../../03-인터페이스/04-시험-벡터.md), [`02-펌웨어/05-선개발-시험.md`](../../02-펌웨어/05-선개발-시험.md) 1.1·4절, [`04-소프트웨어/01-구성.md`](../../04-소프트웨어/01-구성.md) 6절.
+**Spec:** [`docs/03-인터페이스/02-USB.md`](../03-인터페이스/02-USB.md) 1·2·3·5·7절, [`01-BLE.md`](../03-인터페이스/01-BLE.md) 2·3절, [`04-시험-벡터.md`](../03-인터페이스/04-시험-벡터.md), [`02-펌웨어/05-선개발-시험.md`](../02-펌웨어/05-선개발-시험.md) 1.1·4절, [`04-소프트웨어/01-구성.md`](../04-소프트웨어/01-구성.md) 6절.
 
 **실행 위치:** 이 저장소(CubeSpace) 하나에서 실행한다. Task 1(생성기)은 `packages/protocol/vectors/`, Task 2(PC 코덱)는 `packages/protocol/`, Task 3(펌웨어 코덱)은 `firmware/`. 파일 경로와 명령은 저장소 뿌리 기준이다.
 
@@ -16,10 +16,10 @@
 
 ## 이 계획의 위치
 
-| 순서 | 계획(`docs/superpowers/plans/`) | 범위 |
+| 순서 | 계획(`docs/plans/`) | 범위 |
 |---|---|---|
-| **1** | **proto-v1(이 문서)** | 펌웨어 [05-선개발](../../02-펌웨어/05-선개발-시험.md) 4절 2단계, PC [01-구성](../../04-소프트웨어/01-구성.md) 6절 1·2단계의 코덱 부분 |
-| 2 | pc-gateway-estimate | 게이트웨이 세션 G1~G8, `estimate`([시험 벡터 부록](../../03-인터페이스/04-시험-벡터.md)의 `estimate()` 이식), 시뮬레이터 입력 |
+| **1** | **proto-v1(이 문서)** | 펌웨어 [05-선개발](../02-펌웨어/05-선개발-시험.md) 4절 2단계, PC [01-구성](../04-소프트웨어/01-구성.md) 6절 1·2단계의 코덱 부분 |
+| 2 | pc-gateway-estimate | 게이트웨이 세션 G1~G8, `estimate`([시험 벡터 부록](../03-인터페이스/04-시험-벡터.md)의 `estimate()` 이식), 시뮬레이터 입력 |
 | 3 | fw-cube-logic | `est`·`frame`·`tpad`, `cube_logic`(버튼 4 s 포함) |
 | 4 | fw-pad-logic | `pad_link`, `optics`, `pad_pump`·스냅샷·`led_map`, 가상 큐브·패드 → L0 파일 |
 | 5 | pc-engine-events | `engine`, `cube-events` |
@@ -381,7 +381,7 @@ git commit -m "feat(proto): 공용 시험 벡터 생성기와 벡터 파일 형�
 
 - [ ] **Step 1: workspace를 준비한다**
 
-Task 1의 worktree(`CubeSpace-proto-v1`)에서 이어서 한다. 전제: 저장소 뿌리에 pnpm workspace(`package.json`·`pnpm-workspace.yaml`, 고정 판 TypeScript·Vitest)가 있다([01-구성](../../04-소프트웨어/01-구성.md) 5절 첫 커밋). 없으면 그 커밋을 먼저 한다. `packages/protocol/package.json`이 없으면 이름 `@cubespace/protocol`, `private: true`로 만든다 [실측 필요].
+Task 1의 worktree(`CubeSpace-proto-v1`)에서 이어서 한다. 전제: 저장소 뿌리에 pnpm workspace(`package.json`·`pnpm-workspace.yaml`, 고정 판 TypeScript·Vitest)가 있다([01-구성](../04-소프트웨어/01-구성.md) 5절 첫 커밋). 없으면 그 커밋을 먼저 한다. `packages/protocol/package.json`이 없으면 이름 `@cubespace/protocol`, `private: true`로 만든다 [실측 필요].
 
 ```text
 pnpm install
